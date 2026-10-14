@@ -150,6 +150,8 @@ python3 -m viraldzen html --db data/a/viral.sqlite --db data/b/viral.sqlite --ou
 
 Агент здоровается, спрашивает тему или ссылку и в конце отдаёт HTML-таблицу. Чужие пресеты не подставляет.
 
+Тема для канала «В-план» после локальной карточки кладётся во вкладку «План +» командой `python3 -m viraldzen plan-plus --card <файл>`. Порядок — в `AGENTS.md`. Сервер и ключ задаются переменными `VITRINE_HOST`, `VITRINE_USER` и `VITRINE_SSH_KEY`, в репозиторий их не пишите.
+
 ## Тесты
 
 ```bash
