@@ -19,3 +19,6 @@ handoff.md
 !.agents/skills/**/handoff.md
 !skills/**/handoff.md
 .DS_Store
+.env
+.env.*
+!.env.example
