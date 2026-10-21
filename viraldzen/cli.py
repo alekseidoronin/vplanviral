@@ -21,6 +21,7 @@ from viraldzen.topics import (
     merge_official_topics,
     select_official_topics,
 )
+from viraldzen.vitrine import VitrineError, publish_card
 
 
 def _load_config(path: Path) -> dict:
@@ -526,6 +527,31 @@ def _cmd_collect(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_plan_plus(args: argparse.Namespace) -> int:
+    if not args.card.is_file():
+        raise SystemExit(f"Нет файла карточки: {args.card}")
+    try:
+        raw = json.loads(args.card.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise SystemExit("Карточка должна быть JSON-объектом") from exc
+    if not isinstance(raw, dict):
+        raise SystemExit("Карточка должна быть JSON-объектом")
+    try:
+        result = publish_card(raw, dry_run=bool(args.dry_run))
+    except VitrineError as exc:
+        raise SystemExit(str(exc)) from exc
+    if args.dry_run:
+        print(
+            f"Дублей нет. Во вкладке «План +» стало бы {result['count']} карточек. Запись не делалась."
+        )
+        return 0
+    print(
+        f"Карточка добавлена во вкладку «План +». В списке {result['count']}."
+        f" Коммит {result['revision']}. Бэкап {result['backup']}."
+    )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="viraldzen",
@@ -637,6 +663,17 @@ def main(argv: list[str] | None = None) -> int:
         help="Один файл: картинки по URL Дзена, можно скачать и открыть без папки images",
     )
 
+    plan_p = sub.add_parser(
+        "plan-plus",
+        help="Добавить одну карточку темы во вкладку «План +» на витрине",
+    )
+    plan_p.add_argument("--card", type=Path, required=True, help="JSON карточки: title, hook, source_url, source_date, why")
+    plan_p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Проверить дубли и ничего не записывать",
+    )
+
     args = parser.parse_args(argv)
 
     if args.command == "topics":
@@ -668,6 +705,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{len(rows)} rows")
         _print_table(rows, limit=args.limit)
         return 0
+
+    if args.command == "plan-plus":
+        return _cmd_plan_plus(args)
 
     if args.command == "html":
         groups = []
